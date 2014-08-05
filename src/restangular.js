@@ -39,6 +39,15 @@ module.provider('Restangular', function() {
     };
 
     /**
+     * Whether or not to internally handle 304 responses
+     */
+    config.handle304 = _.isUndefined(config.handle304) ? true : config.handle304;
+    object.setHandle304 = function(handle304) {
+      config.handle304 = handle304 !== false;
+      return this;
+    };
+
+    /**
      * Sets the extra fields to keep from the parents
      */
     config.extraFields = config.extraFields || [];
@@ -1087,7 +1096,7 @@ module.provider('Restangular', function() {
 
         urlHandler.resource(this, $http, request.httpConfig, request.headers, request.params, what,
                 this[config.restangularFields.etag], operation)[method]().then(okCallback, function error(response) {
-          if (response.status === 304 && __this[config.restangularFields.restangularCollection]) {
+          if (config.handle304 && response.status === 304 && __this[config.restangularFields.restangularCollection]) {
             resolvePromise(deferred, response, __this, filledArray);
           } else if ( _.every(config.errorInterceptors, function(cb) { return cb(response, deferred, okCallback) !== false; }) ) {
             // triggered if no callback returns false
@@ -1159,7 +1168,7 @@ module.provider('Restangular', function() {
         };
 
         var errorCallback = function(response) {
-          if (response.status === 304 && config.isSafe(operation)) {
+          if (config.handle304 && response.status === 304 && config.isSafe(operation)) {
             resolvePromise(deferred, response, __this, filledObject);
           } else if ( _.every(config.errorInterceptors, function(cb) { return cb(response, deferred, okCallback) !== false; }) ) {
             // triggered if no callback returns false
